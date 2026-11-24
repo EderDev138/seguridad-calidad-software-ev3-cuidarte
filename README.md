@@ -29,6 +29,7 @@ verificados.
 |---|---|
 | `entrega/Informe_EP3_Cuidarte+.docx` | **Informe del encargo** (grupal, 11 %), con el formato de la pauta |
 | `docs/06_Informe_EP3_Cuidarte+.md` | Fuente de verdad del informe; el `.docx` se genera desde aquí |
+| `entrega/Presentacion_EP3_Cuidarte+.pptx` | **Presentacion de la defensa**: 11 diapositivas con notas del orador |
 | `docs/05_Guion_Oral_EP3.md` | Guion de la **defensa individual** (24 %) y banco de preguntas |
 | `docs/00_Comparacion_EV2_y_ejemplo_Atlas.md` | Análisis de brechas que originó este trabajo |
 | `docs/01_Plan_de_pasos_EP3.md` | Plan de trabajo ordenado por los pesos de la rúbrica |

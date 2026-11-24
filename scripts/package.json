@@ -2,14 +2,16 @@
   "name": "cuidarte-plus-entrega-ep3",
   "version": "1.0.0",
   "private": true,
-  "description": "Generacion de los entregables de la EP3: diagrama de controles e informe en Word con el formato de la pauta",
+  "description": "Generacion de los entregables de la EP3: diagrama de controles, informe en Word y presentacion de la defensa",
   "type": "module",
   "scripts": {
     "diagrama": "node generar-diagrama.mjs",
     "informe": "node generar-informe-docx.mjs",
-    "todo": "npm run diagrama && npm run informe"
+    "presentacion": "node generar-presentacion-pptx.mjs",
+    "todo": "npm run diagrama && npm run informe && npm run presentacion"
   },
   "devDependencies": {
-    "docx": "9.5.1"
+    "docx": "9.5.1",
+    "pptxgenjs": "^4.0.1"
   }
 }

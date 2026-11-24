@@ -14,6 +14,10 @@ Eder Valdivia · Marcelo Morales · ISY1102 · Sección 003V
 
 ---
 
+> Las once diapositivas de este guion estan generadas en
+> `entrega/Presentacion_EP3_Cuidarte+.pptx`, con el texto de cada tramo en las
+> **notas del orador**. Se regenera con `node scripts/generar-presentacion-pptx.mjs`.
+
 ## Lo que la pauta exige que aparezca
 
 La presentación **debe** contener estos cinco puntos. Son los de la pauta
