@@ -1,0 +1,42 @@
+=====================================================================
+Cuidarte+ v1.2 · EP3 · Pruebas no funcionales automatizadas (Lighthouse)
+=====================================================================
+Fecha de ejecucion : 2026-11-24T00:34:53.796Z
+Ejecutor           : Eder Valdivia
+Pantalla auditada  : http://localhost:5173
+Node               : v22.16.0
+Categorias: rendimiento · accesibilidad · buenas practicas · SEO
+=====================================================================
+
+--- Puntajes por categoria ------------------------------------------
+CATEGORIA            PUNTAJE  UMBRAL   RESULTADO
+-------------------  -------  -------  ---------
+Rendimiento            100%     80%    CUMPLE
+Accesibilidad          100%     90%    CUMPLE
+Buenas practicas       100%     90%    CUMPLE
+SEO                     91%      —    informativo
+
+--- Metricas de rendimiento percibido -------------------------------
+First Contentful Paint                          0.5 s
+Largest Contentful Paint                        0.5 s
+Speed Index                                     0.5 s
+Total Blocking Time                              0 ms
+Cumulative Layout Shift                             0
+Time to Interactive                             0.5 s
+
+--- Accesibilidad (Ley 20.422 · WCAG 2.1 AA) -------------------------
+Comprobaciones aplicables : 17
+Aprobadas                 : 17
+Con hallazgos             : 0
+Sin hallazgos: todas las comprobaciones automatizables se aprueban.
+
+--- Buenas practicas con hallazgos -----------------------------------
+Sin hallazgos.
+
+=====================================================================
+Resultado: todos los umbrales se cumplen
+Duracion de la auditoria automatizada: 15.4 s
+Equivalente manual: una revision de accesibilidad punto por punto
+sobre 17 criterios toma del orden de 2 a 3 horas de trabajo.
+Informe navegable: C:\Users\eder_\OneDrive\Desktop\SeguridadCalidad\ev3\evidencias\v1.2\automatizacion\lighthouse-spa.html
+=====================================================================

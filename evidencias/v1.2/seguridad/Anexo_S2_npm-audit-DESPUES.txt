@@ -1,0 +1,45 @@
+=====================================================================
+Cuidarte+ v1.2 · EP3 · Anexo S2 · Analisis de dependencias (SCA)
+Herramienta: npm audit (avisos del registro npm)
+Enfoque    : librerias de terceros con vulnerabilidades publicadas
+Fecha de ejecucion : 2026-11-24T01:01:04Z
+Ejecutor           : Eder Valdivia
+=====================================================================
+
+Criterio: en produccion cualquier severidad bloquea; en desarrollo,
+solo alta y critica, porque ese codigo no se despliega.
+
+--- API · dependencias de produccion ----------------------
+found 0 vulnerabilities
+codigo de salida: 0
+
+--- API · todas las dependencias ------------------------
+Severity: moderate
+minimatch has potential denial of service via globparts amplification - https://github.com/advisories/GHSA-g3hv-75wg-m249
+fix available via `npm audit fix --force`
+Will install @stryker-mutator/core@6.4.1, which is a breaking change
+node_modules/minimatch
+node_modules/test-exclude/node_modules/glob/node_modules/minimatch
+  @stryker-mutator/core  >=6.4.2
+  Depends on vulnerable versions of minimatch
+  node_modules/@stryker-mutator/core
+    @stryker-mutator/jest-runner  >=7.0.1
+    Depends on vulnerable versions of @stryker-mutator/core
+    node_modules/@stryker-mutator/jest-runner
+  eslint  10.0.0-alpha.0 - 10.14.0
+  Depends on vulnerable versions of minimatch
+  node_modules/eslint
+
+21 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+--- WEB · dependencias de produccion ----------------------
+found 0 vulnerabilities
+codigo de salida: 0
+
+--- WEB · todas las dependencias ------------------------
+found 0 vulnerabilities
+
+=====================================================================

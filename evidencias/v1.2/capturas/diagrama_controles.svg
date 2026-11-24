@@ -1,0 +1,339 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1560" height="951"
+     viewBox="0 0 1560 951" font-family="Arial, Helvetica, sans-serif">
+  <defs>
+    <marker id="punta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+            orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8a93a0"/>
+    </marker>
+    <style>
+      .titulo    { font-size: 27px; font-weight: bold; fill: #13344f; }
+      .bajada    { font-size: 14.5px; fill: #4a5361; }
+      .etapa     { font-size: 16px; font-weight: bold; fill: #13344f; }
+      .subetapa  { font-size: 12px; fill: #6b7482; font-style: italic; }
+      .numero    { font-size: 15px; font-weight: bold; fill: #ffffff; text-anchor: middle; }
+      .rotulo    { font-size: 10.5px; font-weight: bold; fill: #6b7482; letter-spacing: 0.6px; }
+      .item      { font-size: 12.5px; fill: #1f2733; }
+      .leyenda   { font-size: 13px; fill: #1f2733; }
+      .leytitulo { font-size: 13.5px; font-weight: bold; fill: #13344f; letter-spacing: 0.4px; }
+      .pie       { font-size: 12px; fill: #6b7482; }
+    </style>
+  </defs>
+
+  <rect width="1560" height="951" fill="#ffffff"/>
+
+  <text x="24" y="44" class="titulo">
+    Integracion de controles de seguridad automatizados · Cuidarte+ v1.2
+  </text>
+  <text x="24" y="70" class="bajada">
+    Cada control del producto tiene una puerta automatizada que lo verifica, y cada puerta responde a un criterio normativo o legal.
+  </text>
+  <text x="24" y="92" class="bajada">
+    El color de la barra izquierda indica el criterio que el control preserva. ISY1102 · Evaluacion Parcial N.º 3 · Caso B: Cuidarte+
+  </text>
+
+  
+    <g>
+      <rect x="24" y="128" width="282" height="515" rx="10"
+            fill="#f6f7f9" stroke="#c9ced6" stroke-width="1.2"/>
+      <circle cx="50" cy="160" r="15" fill="#13344f"/>
+      <text x="50" y="166" class="numero">1</text>
+      <text x="74" y="157" class="etapa">Codigo fuente</text>
+      <text x="74" y="174" class="subetapa">lo que se escribe</text>
+
+      <text x="36" y="202" class="rotulo">CONTROL EN EL PRODUCTO</text>
+      
+        <g>
+          <rect x="36" y="214" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="36" y="214" width="5" height="34" rx="2.5" fill="#b91c1c"/>
+          <text x="51" y="236" class="item">JWT 15 min + bcrypt costo 12</text>
+        </g>
+        <g>
+          <rect x="36" y="255" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="36" y="255" width="5" height="34" rx="2.5" fill="#b91c1c"/>
+          <text x="51" y="277" class="item">RBAC en el backend (RB-1 a RB-3)</text>
+        </g>
+        <g>
+          <rect x="36" y="296" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="36" y="296" width="5" height="34" rx="2.5" fill="#b45309"/>
+          <text x="51" y="318" class="item">Esquemas Zod estrictos</text>
+        </g>
+        <g>
+          <rect x="36" y="337" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="36" y="337" width="5" height="34" rx="2.5" fill="#b45309"/>
+          <text x="51" y="359" class="item">SQL parametrizado</text>
+        </g>
+        <g>
+          <rect x="36" y="378" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="36" y="378" width="5" height="34" rx="2.5" fill="#1d4ed8"/>
+          <text x="51" y="400" class="item">Baja logica + auditoria</text>
+        </g>
+
+      <text x="36" y="449" class="rotulo">PUERTA AUTOMATIZADA QUE LO VERIFICA</text>
+      
+        <g>
+          <rect x="36" y="461" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="36" y="461" width="5" height="34" rx="2.5" fill="#b45309"/>
+          <text x="51" y="483" class="item">ESLint + plugin security (SAST)</text>
+        </g>
+        <g>
+          <rect x="36" y="502" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="36" y="502" width="5" height="34" rx="2.5" fill="#047857"/>
+          <text x="51" y="524" class="item">ESLint jsx-a11y (accesibilidad)</text>
+        </g>
+        <g>
+          <rect x="36" y="543" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="36" y="543" width="5" height="34" rx="2.5" fill="#6d28d9"/>
+          <text x="51" y="565" class="item">Jest 132 pruebas + cobertura</text>
+        </g>
+        <g>
+          <rect x="36" y="584" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="36" y="584" width="5" height="34" rx="2.5" fill="#6d28d9"/>
+          <text x="51" y="606" class="item">Cucumber 6 escenarios BDD</text>
+        </g>
+      <path d="M 309 162 l 13 0" stroke="#8a93a0"
+                stroke-width="2" marker-end="url(#punta)"/>
+    </g>
+    <g>
+      <rect x="326" y="128" width="282" height="310" rx="10"
+            fill="#f6f7f9" stroke="#c9ced6" stroke-width="1.2"/>
+      <circle cx="352" cy="160" r="15" fill="#13344f"/>
+      <text x="352" y="166" class="numero">2</text>
+      <text x="376" y="157" class="etapa">Dependencias</text>
+      <text x="376" y="174" class="subetapa">lo que se hereda</text>
+
+      <text x="338" y="202" class="rotulo">CONTROL EN EL PRODUCTO</text>
+      
+        <g>
+          <rect x="338" y="214" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="338" y="214" width="5" height="34" rx="2.5" fill="#6d28d9"/>
+          <text x="353" y="236" class="item">Versiones fijadas en package.json</text>
+        </g>
+        <g>
+          <rect x="338" y="255" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="338" y="255" width="5" height="34" rx="2.5" fill="#6d28d9"/>
+          <text x="353" y="277" class="item">package-lock.json versionado</text>
+        </g>
+
+      <text x="338" y="326" class="rotulo">PUERTA AUTOMATIZADA QUE LO VERIFICA</text>
+      
+        <g>
+          <rect x="338" y="338" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="338" y="338" width="5" height="34" rx="2.5" fill="#b91c1c"/>
+          <text x="353" y="360" class="item">npm audit produccion: 0 tolerancia</text>
+        </g>
+        <g>
+          <rect x="338" y="379" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="338" y="379" width="5" height="34" rx="2.5" fill="#b91c1c"/>
+          <text x="353" y="401" class="item">npm audit desarrollo: alta y critica</text>
+        </g>
+      <path d="M 611 162 l 13 0" stroke="#8a93a0"
+                stroke-width="2" marker-end="url(#punta)"/>
+    </g>
+    <g>
+      <rect x="628" y="128" width="282" height="351" rx="10"
+            fill="#f6f7f9" stroke="#c9ced6" stroke-width="1.2"/>
+      <circle cx="654" cy="160" r="15" fill="#13344f"/>
+      <text x="654" y="166" class="numero">3</text>
+      <text x="678" y="157" class="etapa">Imagen de contenedor</text>
+      <text x="678" y="174" class="subetapa">lo que se despliega</text>
+
+      <text x="640" y="202" class="rotulo">CONTROL EN EL PRODUCTO</text>
+      
+        <g>
+          <rect x="640" y="214" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="640" y="214" width="5" height="34" rx="2.5" fill="#b45309"/>
+          <text x="655" y="236" class="item">Build multi-stage sin codigo fuente</text>
+        </g>
+        <g>
+          <rect x="640" y="255" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="640" y="255" width="5" height="34" rx="2.5" fill="#b91c1c"/>
+          <text x="655" y="277" class="item">Usuario no privilegiado (uid 100)</text>
+        </g>
+        <g>
+          <rect x="640" y="296" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="640" y="296" width="5" height="34" rx="2.5" fill="#b91c1c"/>
+          <text x="655" y="318" class="item">no-new-privileges en compose</text>
+        </g>
+
+      <text x="640" y="367" class="rotulo">PUERTA AUTOMATIZADA QUE LO VERIFICA</text>
+      
+        <g>
+          <rect x="640" y="379" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="640" y="379" width="5" height="34" rx="2.5" fill="#b91c1c"/>
+          <text x="655" y="401" class="item">Trivy: base del sistema operativo</text>
+        </g>
+        <g>
+          <rect x="640" y="420" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="640" y="420" width="5" height="34" rx="2.5" fill="#b91c1c"/>
+          <text x="655" y="442" class="item">Trivy: paquetes de la imagen</text>
+        </g>
+      <path d="M 913 162 l 13 0" stroke="#8a93a0"
+                stroke-width="2" marker-end="url(#punta)"/>
+    </g>
+    <g>
+      <rect x="930" y="128" width="282" height="597" rx="10"
+            fill="#f6f7f9" stroke="#c9ced6" stroke-width="1.2"/>
+      <circle cx="956" cy="160" r="15" fill="#13344f"/>
+      <text x="956" y="166" class="numero">4</text>
+      <text x="980" y="157" class="etapa">Ambiente en ejecucion</text>
+      <text x="980" y="174" class="subetapa">lo que el usuario recibe</text>
+
+      <text x="942" y="202" class="rotulo">CONTROL EN EL PRODUCTO</text>
+      
+        <g>
+          <rect x="942" y="214" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="942" y="214" width="5" height="34" rx="2.5" fill="#b45309"/>
+          <text x="957" y="236" class="item">Cabeceras helmet (API)</text>
+        </g>
+        <g>
+          <rect x="942" y="255" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="942" y="255" width="5" height="34" rx="2.5" fill="#b45309"/>
+          <text x="957" y="277" class="item">Cabeceras nginx en toda respuesta</text>
+        </g>
+        <g>
+          <rect x="942" y="296" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="942" y="296" width="5" height="34" rx="2.5" fill="#1d4ed8"/>
+          <text x="957" y="318" class="item">Cache-Control: no-store</text>
+        </g>
+        <g>
+          <rect x="942" y="337" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="942" y="337" width="5" height="34" rx="2.5" fill="#b45309"/>
+          <text x="957" y="359" class="item">CORS restringido por origen</text>
+        </g>
+        <g>
+          <rect x="942" y="378" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="942" y="378" width="5" height="34" rx="2.5" fill="#b91c1c"/>
+          <text x="957" y="400" class="item">Limitador por IP y por cuenta</text>
+        </g>
+
+      <text x="942" y="449" class="rotulo">PUERTA AUTOMATIZADA QUE LO VERIFICA</text>
+      
+        <g>
+          <rect x="942" y="461" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="942" y="461" width="5" height="34" rx="2.5" fill="#b91c1c"/>
+          <text x="957" y="483" class="item">Sondas de seguridad: 29 casos</text>
+        </g>
+        <g>
+          <rect x="942" y="502" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="942" y="502" width="5" height="34" rx="2.5" fill="#b45309"/>
+          <text x="957" y="524" class="item">OWASP ZAP baseline (SPA y API)</text>
+        </g>
+        <g>
+          <rect x="942" y="543" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="942" y="543" width="5" height="34" rx="2.5" fill="#6d28d9"/>
+          <text x="957" y="565" class="item">Newman: 26 peticiones, 58 asserts</text>
+        </g>
+        <g>
+          <rect x="942" y="584" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="942" y="584" width="5" height="34" rx="2.5" fill="#6d28d9"/>
+          <text x="957" y="606" class="item">Playwright: 7 casos de interfaz</text>
+        </g>
+        <g>
+          <rect x="942" y="625" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="942" y="625" width="5" height="34" rx="2.5" fill="#047857"/>
+          <text x="957" y="647" class="item">Lighthouse: accesibilidad 100 %</text>
+        </g>
+        <g>
+          <rect x="942" y="666" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="942" y="666" width="5" height="34" rx="2.5" fill="#6d28d9"/>
+          <text x="957" y="688" class="item">k6: 200 usuarios concurrentes</text>
+        </g>
+      <path d="M 1215 162 l 13 0" stroke="#8a93a0"
+                stroke-width="2" marker-end="url(#punta)"/>
+    </g>
+    <g>
+      <rect x="1232" y="128" width="282" height="351" rx="10"
+            fill="#f6f7f9" stroke="#c9ced6" stroke-width="1.2"/>
+      <circle cx="1258" cy="160" r="15" fill="#13344f"/>
+      <text x="1258" y="166" class="numero">5</text>
+      <text x="1282" y="157" class="etapa">Veredicto</text>
+      <text x="1282" y="174" class="subetapa">lo que se autoriza</text>
+
+      <text x="1244" y="202" class="rotulo">CONTROL EN EL PRODUCTO</text>
+      
+        <g>
+          <rect x="1244" y="214" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="1244" y="214" width="5" height="34" rx="2.5" fill="#6d28d9"/>
+          <text x="1259" y="236" class="item">Trazabilidad caso -> requisito</text>
+        </g>
+        <g>
+          <rect x="1244" y="255" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="1244" y="255" width="5" height="34" rx="2.5" fill="#6d28d9"/>
+          <text x="1259" y="277" class="item">Evidencia con fecha y ejecutor</text>
+        </g>
+        <g>
+          <rect x="1244" y="296" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="1244" y="296" width="5" height="34" rx="2.5" fill="#1d4ed8"/>
+          <text x="1259" y="318" class="item">Registro de auditoria consultable</text>
+        </g>
+
+      <text x="1244" y="367" class="rotulo">PUERTA AUTOMATIZADA QUE LO VERIFICA</text>
+      
+        <g>
+          <rect x="1244" y="379" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="1244" y="379" width="5" height="34" rx="2.5" fill="#6d28d9"/>
+          <text x="1259" y="401" class="item">Si una puerta falla, no se despliega</text>
+        </g>
+        <g>
+          <rect x="1244" y="420" width="282" height="34" rx="5"
+                fill="#ffffff" stroke="#d6dae1" stroke-width="1"/>
+          <rect x="1244" y="420" width="5" height="34" rx="2.5" fill="#b91c1c"/>
+          <text x="1259" y="442" class="item">Hallazgo abierto -> plan con plazo</text>
+        </g>
+      
+    </g>
+
+  <rect x="24" y="751" width="1512" height="174"
+        rx="10" fill="#f6f7f9" stroke="#c9ced6" stroke-width="1.2"/>
+  <text x="42" y="775" class="leytitulo">
+    CRITERIO NORMATIVO Y LEGAL QUE CADA CONTROL PRESERVA
+  </text>
+  
+      <rect x="42" y="802" width="13" height="13" rx="3" fill="#1d4ed8"/>
+      <text x="64" y="813" class="leyenda">Ley 19.628 / 21.719 · datos personales sensibles de salud</text>
+      <rect x="42" y="826" width="13" height="13" rx="3" fill="#b91c1c"/>
+      <text x="64" y="837" class="leyenda">Ley 21.663 · ciberseguridad e informacion de incidentes</text>
+      <rect x="42" y="850" width="13" height="13" rx="3" fill="#047857"/>
+      <text x="64" y="861" class="leyenda">Ley 20.422 · accesibilidad universal (WCAG 2.1 AA)</text>
+      <rect x="42" y="874" width="13" height="13" rx="3" fill="#b45309"/>
+      <text x="64" y="885" class="leyenda">OWASP Top 10 y ASVS · buenas practicas de la industria</text>
+      <rect x="42" y="898" width="13" height="13" rx="3" fill="#6d28d9"/>
+      <text x="64" y="909" class="leyenda">ISO/IEC 25010 y ISO/IEC/IEEE 29119 · calidad y pruebas</text>
+
+  <text x="1536" y="939" class="pie" text-anchor="end">
+    Generado con scripts/generar-diagrama.mjs · Eder Valdivia y Marcelo Morales · Seccion 003V
+  </text>
+</svg>

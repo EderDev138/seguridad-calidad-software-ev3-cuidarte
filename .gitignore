@@ -1,0 +1,20 @@
+# Dependencias
+node_modules/
+
+# Secretos del ambiente (NFR-SEG-13): nunca se versionan
+.env
+.env.local
+*.env.backup
+
+# Resultados de cobertura y artefactos de construccion
+coverage/
+dist/
+build/
+.stryker-tmp/
+
+# Temporales del sistema
+Thumbs.db
+.DS_Store
+*.log
+
+# Los informes HTML de ZAP y Lighthouse SI se versionan: son la evidencia.

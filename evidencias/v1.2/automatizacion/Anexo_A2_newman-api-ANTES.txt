@@ -1,0 +1,178 @@
+=====================================================================
+Cuidarte+ v1.2 · EP3 · Anexo A2 · Pruebas automatizadas de API (Postman/Newman)
+Herramienta: coleccion Postman ejecutada sin interfaz grafica con Newman
+Enfoque: validacion de endpoints, codigos de respuesta y reglas de
+         autorizacion directamente contra la API, sin pasar por la SPA
+Fecha de ejecucion : 2026-11-24T00:22:06Z
+Ejecutor           : Eder Valdivia
+Requisito previo   : limitador de autenticacion con su ventana libre
+                     (docker compose restart api)
+=====================================================================
+
+newman
+
+Cuidarte+ v1.2 · EP3 · API REST
+
+□ 00 Disponibilidad
+└ GET /salud · el servicio responde y declara su version
+  GET http://localhost:3000/api/v1/salud [200 OK, 1.06kB, 67ms]
+  √  CP-API-01 · HTTP 200
+  √  CP-API-01 · estado operativo
+  √  CP-API-01 · declara la version desplegada
+  √  CP-API-01 · responde en menos de 1000 ms (NFR-PERF-1)
+
+□ 01 Autenticacion
+└ POST /auth/login · credencial valida de administrador
+  POST http://localhost:3000/api/v1/auth/login [200 OK, 1.69kB, 696ms]
+  √  CP-API-02 · HTTP 200
+  √  CP-API-02 · entrega token de acceso
+  √  CP-API-02 · el token es un JWT de tres segmentos
+  √  CP-API-02 · no devuelve el hash de la contrasena
+  √  CP-API-02 · la sesion no viaja en cookie (defensa CSRF)
+
+└ POST /auth/login · credencial invalida
+  POST http://localhost:3000/api/v1/auth/login [401 Unauthorized, 1.12kB, 643ms]
+  √  CP-API-03 · HTTP 401
+  √  CP-API-03 · el mensaje no revela si el usuario existe
+  √  CP-API-03 · no entrega token
+
+└ GET /auth/yo · el token identifica al administrador
+  GET http://localhost:3000/api/v1/auth/yo [200 OK, 1.11kB, 16ms]
+  √  CP-API-04 · HTTP 200
+  √  CP-API-04 · el rol resuelto es ADMIN
+  √  CP-API-04 · el perfil no expone el hash de la contrasena
+
+└ POST /auth/login · sesion del rol PACIENTE
+  POST http://localhost:3000/api/v1/auth/login [200 OK, 1.7kB, 643ms]
+  √  CP-API-05 · HTTP 200
+  √  CP-API-05 · el rol asignado es PACIENTE
+
+□ 02 Pacientes
+└ GET /pacientes · listado completo para el administrador
+  GET http://localhost:3000/api/v1/pacientes [200 OK, 2.25kB, 18ms]
+  √  CP-API-06 · HTTP 200
+  √  CP-API-06 · devuelve una lista
+  √  CP-API-06 · la semilla aporta al menos cinco fichas
+  √  CP-API-06 · cada ficha trae rut, nombres y apellidos
+
+└ POST /pacientes · alta de una ficha nueva
+  POST http://localhost:3000/api/v1/pacientes [201 Created, 1.31kB, 27ms]
+  √  CP-API-07 · HTTP 201
+  √  CP-API-07 · devuelve el identificador asignado
+  √  CP-API-07 · conserva el RUT enviado
+
+└ GET /pacientes/:id · lectura de la ficha creada
+  GET http://localhost:3000/api/v1/pacientes/6 [200 OK, 1.3kB, 18ms]
+  √  CP-API-08 · HTTP 200
+  √  CP-API-08 · corresponde al identificador pedido
+  √  CP-API-08 · la respuesta es JSON con nosniff
+
+└ PUT /pacientes/:id · actualizacion del telefono
+  PUT http://localhost:3000/api/v1/pacientes/6 [200 OK, 1.3kB, 34ms]
+  √  CP-API-09 · HTTP 200
+  √  CP-API-09 · el cambio queda aplicado
+
+└ POST /pacientes · RUT duplicado (regla RB-5)
+  POST http://localhost:3000/api/v1/pacientes [409 Conflict, 1.14kB, 14ms]
+  √  CP-API-10 · HTTP 409: el RUT es unico
+
+□ 03 Examenes
+└ POST /examenes · registro de un examen
+  POST http://localhost:3000/api/v1/examenes [201 Created, 1.34kB, 373ms]
+  √  CP-API-11 · HTTP 201
+  √  CP-API-11 · queda asociado al paciente creado
+  √  CP-API-11 · nace en estado PENDIENTE
+
+└ GET /pacientes/:id/examenes · flujo escalonado
+  GET http://localhost:3000/api/v1/pacientes/6/examenes [200 OK, 1.34kB, 18ms]
+  √  CP-API-12 · HTTP 200
+  √  CP-API-12 · el examen creado aparece en la ficha
+
+└ PUT /examenes/:id · cierre del examen
+  PUT http://localhost:3000/api/v1/examenes/8 [200 OK, 1.32kB, 21ms]
+  √  CP-API-13 · HTTP 200
+  √  CP-API-13 · el estado pasa a COMPLETADO
+
+└ DELETE /examenes/:id · baja logica (RF-3.3)
+  DELETE http://localhost:3000/api/v1/examenes/8 [200 OK, 1.09kB, 84ms]
+  √  CP-API-14 · HTTP 200
+  √  CP-API-14 · la respuesta confirma la baja
+
+└ GET /examenes/:id · el examen dado de baja ya no se entrega
+  GET http://localhost:3000/api/v1/examenes/8 [404 Not Found, 1.13kB, 14ms]
+  √  CP-API-15 · HTTP 404 tras la baja logica
+  √  CP-API-15 · el error no expone traza del servidor
+
+□ 04 Control de acceso
+└ GET /auditoria · el rol PACIENTE no accede (RF-5)
+  GET http://localhost:3000/api/v1/auditoria [403 Forbidden, 1.18kB, 10ms]
+  √  CP-API-16 · HTTP 403
+
+└ POST /pacientes · el rol PACIENTE no crea fichas (RB-2)
+  POST http://localhost:3000/api/v1/pacientes [403 Forbidden, 1.19kB, 12ms]
+  √  CP-API-17 · HTTP 403
+  √  CP-API-17 · el control es del servidor, no de la interfaz
+
+└ GET /pacientes · el rol PACIENTE solo ve su ficha (RB-1)
+  GET http://localhost:3000/api/v1/pacientes [200 OK, 1.31kB, 11ms]
+  √  CP-API-18 · HTTP 200
+  √  CP-API-18 · el listado se reduce a una sola ficha
+
+└ GET /pacientes/:id · referencia directa a ficha ajena (IDOR)
+  GET http://localhost:3000/api/v1/pacientes/6 [404 Not Found, 1.13kB, 9ms]
+  √  CP-API-19 · HTTP 403 o 404 sobre la ficha de otro
+
+└ GET /pacientes · sin cabecera Authorization
+  GET http://localhost:3000/api/v1/pacientes [401 Unauthorized, 1.14kB, 7ms]
+  √  CP-API-20 · HTTP 401
+
+□ 05 Validacion de entradas
+└ POST /pacientes · RUT con digito verificador incorrecto
+  POST http://localhost:3000/api/v1/pacientes [400 Bad Request, 1.16kB, 11ms]
+  √  CP-API-21 · HTTP 400
+
+└ POST /pacientes · campo no declarado (asignacion masiva)
+  POST http://localhost:3000/api/v1/pacientes [400 Bad Request, 1.21kB, 16ms]
+  √  CP-API-22 · HTTP 400 por esquema estricto
+
+└ POST /auth/registro · intento de elegir el rol
+  POST http://localhost:3000/api/v1/auth/registro [400 Bad Request, 1.2kB, 11ms]
+  √  CP-API-23 · HTTP 400: el rol no es un campo del registro
+
+└ POST /auth/login · carga de inyeccion SQL
+  POST http://localhost:3000/api/v1/auth/login [401 Unauthorized, 1.12kB, 12ms]
+  √  CP-API-24 · la inyeccion no autentica
+  √  CP-API-24 · no se entrega token
+
+└ GET /pacientes/:id · identificador no numerico
+  GET http://localhost:3000/api/v1/pacientes/1%20OR%201%3D1 [400 Bad Request, 1.23kB, 10ms]
+  √  CP-API-25 · HTTP 400 antes de llegar al dominio
+
+□ 06 Auditoria
+└ GET /auditoria · el administrador consulta la traza (RF-5)
+  GET http://localhost:3000/api/v1/auditoria [200 OK, 9.07kB, 27ms]
+  √  CP-API-26 · HTTP 200
+  √  CP-API-26 · hay registros de auditoria
+  √  CP-API-26 · la traza no guarda contrasenas
+  √  CP-API-26 · las acciones de esta corrida quedaron registradas
+
+┌─────────────────────────┬────────────────────┬───────────────────┐
+│                         │           executed │            failed │
+├─────────────────────────┼────────────────────┼───────────────────┤
+│              iterations │                  1 │                 0 │
+├─────────────────────────┼────────────────────┼───────────────────┤
+│                requests │                 26 │                 0 │
+├─────────────────────────┼────────────────────┼───────────────────┤
+│            test-scripts │                 26 │                 0 │
+├─────────────────────────┼────────────────────┼───────────────────┤
+│      prerequest-scripts │                  3 │                 0 │
+├─────────────────────────┼────────────────────┼───────────────────┤
+│              assertions │                 58 │                 0 │
+├─────────────────────────┴────────────────────┴───────────────────┤
+│ total run duration: 4.8s                                         │
+├──────────────────────────────────────────────────────────────────┤
+│ total data received: 13.56kB (approx)                            │
+├──────────────────────────────────────────────────────────────────┤
+│ average response time: 108ms [min: 7ms, max: 696ms, s.d.: 211ms] │
+└──────────────────────────────────────────────────────────────────┘
+codigo de salida de Newman: 0

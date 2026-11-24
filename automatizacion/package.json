@@ -1,0 +1,23 @@
+{
+  "name": "cuidarte-plus-automatizacion-ep3",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Automatizacion de pruebas funcionales y no funcionales de Cuidarte+ v1.2 para la Evaluacion Parcial 3",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "ui": "node ui-flujo-playwright.mjs",
+    "api": "newman run postman/Cuidarte-EP3.postman_collection.json -e postman/Cuidarte-EP3.postman_environment.json --reporters cli",
+    "nofuncional": "node lighthouse-spa.mjs",
+    "carga": "node carga-k6.mjs",
+    "todo": "npm run api && npm run ui && npm run nofuncional && npm run carga"
+  },
+  "devDependencies": {
+    "chrome-launcher": "1.2.0",
+    "lighthouse": "12.8.2",
+    "newman": "6.2.1",
+    "playwright": "1.56.1"
+  }
+}

@@ -1,0 +1,741 @@
+{
+  "info": {
+    "_postman_id": "c1d2e3f4-ep03-4b1a-9c7d-cuidarteplus0001",
+    "name": "Cuidarte+ v1.2 · EP3 · API REST",
+    "description": "Coleccion de pruebas automatizadas de la API de Cuidarte+ para la Evaluacion Parcial 3 (ISY1102).\n\nFuncion en el plan de pruebas: validar los endpoints y sus respuestas (codigo HTTP, forma del cuerpo y reglas de autorizacion) sin pasar por la interfaz. Complementa a Playwright, que cubre el recorrido del navegador.\n\nSe ejecuta sin interfaz grafica con Newman:\n\n    npm run api\n\nCarpetas:\n  00 Disponibilidad      · NFR-DIS-1\n  01 Autenticacion       · RF-1.1, RF-1.3\n  02 Pacientes           · RF-2.2 a RF-2.4\n  03 Examenes            · RF-3.1 a RF-3.3\n  04 Control de acceso   · NFR-SEG-4, RB-1 a RB-3\n  05 Validacion entradas · NFR-SEG-5\n  06 Auditoria           · RF-5\n\nCada peticion lleva asserts: la coleccion falla con codigo de salida distinto de cero si alguna respuesta se desvia de lo esperado, de modo que sirve como puerta de calidad y no solo como documentacion.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "token_admin", "value": "" },
+    { "key": "token_paciente", "value": "" },
+    { "key": "paciente_id", "value": "" },
+    { "key": "examen_id", "value": "" },
+    { "key": "rut_nuevo", "value": "" },
+    { "key": "tipo_examen", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "00 Disponibilidad",
+      "item": [
+        {
+          "name": "GET /salud · el servicio responde y declara su version",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-01 · HTTP 200', () => pm.response.to.have.status(200));",
+                  "const cuerpo = pm.response.json();",
+                  "pm.test('CP-API-01 · estado operativo', () => pm.expect(cuerpo.estado).to.eql('operativo'));",
+                  "pm.test('CP-API-01 · declara la version desplegada', () => pm.expect(cuerpo.version).to.be.a('string').and.not.empty);",
+                  "pm.test('CP-API-01 · responde en menos de 1000 ms (NFR-PERF-1)', () => pm.expect(pm.response.responseTime).to.be.below(1000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{api}}/salud", "host": ["{{api}}"], "path": ["salud"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 Autenticacion",
+      "item": [
+        {
+          "name": "POST /auth/login · credencial valida de administrador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-02 · HTTP 200', () => pm.response.to.have.status(200));",
+                  "const cuerpo = pm.response.json();",
+                  "pm.test('CP-API-02 · entrega token de acceso', () => pm.expect(cuerpo.token).to.be.a('string').and.not.empty);",
+                  "pm.test('CP-API-02 · el token es un JWT de tres segmentos', () => pm.expect(cuerpo.token.split('.')).to.have.lengthOf(3));",
+                  "pm.test('CP-API-02 · no devuelve el hash de la contrasena', () => pm.expect(JSON.stringify(cuerpo)).to.not.include('$2b$'));",
+                  "pm.test('CP-API-02 · la sesion no viaja en cookie (defensa CSRF)', () => pm.expect(pm.response.headers.get('Set-Cookie')).to.be.oneOf([null, undefined]));",
+                  "pm.collectionVariables.set('token_admin', cuerpo.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreUsuario\": \"{{usuario_admin}}\",\n  \"password\": \"{{clave_qa}}\"\n}"
+            },
+            "url": { "raw": "{{api}}/auth/login", "host": ["{{api}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "POST /auth/login · credencial invalida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-03 · HTTP 401', () => pm.response.to.have.status(401));",
+                  "const cuerpo = pm.response.json();",
+                  "pm.test('CP-API-03 · el mensaje no revela si el usuario existe', () => pm.expect(cuerpo.mensaje || '').to.not.match(/no existe|inexistente|usuario no encontrado/i));",
+                  "pm.test('CP-API-03 · no entrega token', () => pm.expect(cuerpo.token).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreUsuario\": \"{{usuario_admin}}\",\n  \"password\": \"ClaveQueNoCorresponde1!\"\n}"
+            },
+            "url": { "raw": "{{api}}/auth/login", "host": ["{{api}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "GET /auth/yo · el token identifica al administrador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-04 · HTTP 200', () => pm.response.to.have.status(200));",
+                  "const cuerpo = pm.response.json();",
+                  "pm.test('CP-API-04 · el rol resuelto es ADMIN', () => pm.expect(cuerpo.rol).to.eql('ADMIN'));",
+                  "pm.test('CP-API-04 · el perfil no expone el hash de la contrasena', () => pm.expect(cuerpo).to.not.have.property('passwordHash'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": { "raw": "{{api}}/auth/yo", "host": ["{{api}}"], "path": ["auth", "yo"] }
+          }
+        },
+        {
+          "name": "POST /auth/login · sesion del rol PACIENTE",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-05 · HTTP 200', () => pm.response.to.have.status(200));",
+                  "const cuerpo = pm.response.json();",
+                  "pm.test('CP-API-05 · el rol asignado es PACIENTE', () => pm.expect(cuerpo.usuario.rol).to.eql('PACIENTE'));",
+                  "pm.collectionVariables.set('token_paciente', cuerpo.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreUsuario\": \"{{usuario_paciente}}\",\n  \"password\": \"{{clave_qa}}\"\n}"
+            },
+            "url": { "raw": "{{api}}/auth/login", "host": ["{{api}}"], "path": ["auth", "login"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Pacientes",
+      "item": [
+        {
+          "name": "GET /pacientes · listado completo para el administrador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-06 · HTTP 200', () => pm.response.to.have.status(200));",
+                  "const cuerpo = pm.response.json();",
+                  "pm.test('CP-API-06 · devuelve una lista', () => pm.expect(cuerpo).to.be.an('array'));",
+                  "pm.test('CP-API-06 · la semilla aporta al menos cinco fichas', () => pm.expect(cuerpo.length).to.be.at.least(5));",
+                  "pm.test('CP-API-06 · cada ficha trae rut, nombres y apellidos', () => cuerpo.forEach((f) => { pm.expect(f).to.have.property('rut'); pm.expect(f).to.have.property('nombres'); pm.expect(f).to.have.property('apellidos'); }));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": { "raw": "{{api}}/pacientes", "host": ["{{api}}"], "path": ["pacientes"] }
+          }
+        },
+        {
+          "name": "POST /pacientes · alta de una ficha nueva",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Genera un RUT chileno valido y distinto en cada corrida.",
+                  "// El dominio verifica el digito, de modo que un numero al azar",
+                  "// seria rechazado con 400 y la prueba fallaria por el dato y no",
+                  "// por el comportamiento del sistema.",
+                  "const cuerpo = String(10000000 + Math.floor(Math.random() * 9000000));",
+                  "const serie = [2, 3, 4, 5, 6, 7];",
+                  "let suma = 0;",
+                  "for (let i = 0; i < cuerpo.length; i += 1) {",
+                  "  suma += Number(cuerpo[cuerpo.length - 1 - i]) * serie[i % serie.length];",
+                  "}",
+                  "const resto = 11 - (suma % 11);",
+                  "const digito = resto === 11 ? '0' : resto === 10 ? 'K' : String(resto);",
+                  "pm.collectionVariables.set('rut_nuevo', `${cuerpo}-${digito}`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-07 · HTTP 201', () => pm.response.to.have.status(201));",
+                  "const cuerpo = pm.response.json();",
+                  "pm.test('CP-API-07 · devuelve el identificador asignado', () => pm.expect(cuerpo.id).to.be.a('number'));",
+                  "pm.test('CP-API-07 · conserva el RUT enviado', () => pm.expect(cuerpo.rut).to.eql(pm.collectionVariables.get('rut_nuevo')));",
+                  "pm.collectionVariables.set('paciente_id', cuerpo.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rut\": \"{{rut_nuevo}}\",\n  \"nombres\": \"Paciente\",\n  \"apellidos\": \"Automatizacion EP3\",\n  \"fechaNacimiento\": \"1990-03-21\",\n  \"telefono\": \"+56955555555\"\n}"
+            },
+            "url": { "raw": "{{api}}/pacientes", "host": ["{{api}}"], "path": ["pacientes"] }
+          }
+        },
+        {
+          "name": "GET /pacientes/:id · lectura de la ficha creada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-08 · HTTP 200', () => pm.response.to.have.status(200));",
+                  "const cuerpo = pm.response.json();",
+                  "pm.test('CP-API-08 · corresponde al identificador pedido', () => pm.expect(cuerpo.id).to.eql(Number(pm.collectionVariables.get('paciente_id'))));",
+                  "pm.test('CP-API-08 · la respuesta es JSON con nosniff', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(pm.response.headers.get('X-Content-Type-Options')).to.eql('nosniff'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": {
+              "raw": "{{api}}/pacientes/{{paciente_id}}",
+              "host": ["{{api}}"],
+              "path": ["pacientes", "{{paciente_id}}"]
+            }
+          }
+        },
+        {
+          "name": "PUT /pacientes/:id · actualizacion del telefono",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-09 · HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-API-09 · el cambio queda aplicado', () => pm.expect(pm.response.json().telefono).to.eql('+56966666666'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"telefono\": \"+56966666666\"\n}" },
+            "url": {
+              "raw": "{{api}}/pacientes/{{paciente_id}}",
+              "host": ["{{api}}"],
+              "path": ["pacientes", "{{paciente_id}}"]
+            }
+          }
+        },
+        {
+          "name": "POST /pacientes · RUT duplicado (regla RB-5)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-10 · HTTP 409: el RUT es unico', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rut\": \"{{rut_nuevo}}\",\n  \"nombres\": \"Duplicado\",\n  \"apellidos\": \"Prueba Negativa\"\n}"
+            },
+            "url": { "raw": "{{api}}/pacientes", "host": ["{{api}}"], "path": ["pacientes"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 Examenes",
+      "item": [
+        {
+          "name": "POST /examenes · registro de un examen",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('tipo_examen', `Perfil bioquimico EP3 ${Date.now()}`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-11 · HTTP 201', () => pm.response.to.have.status(201));",
+                  "const cuerpo = pm.response.json();",
+                  "pm.test('CP-API-11 · queda asociado al paciente creado', () => pm.expect(cuerpo.pacienteId).to.eql(Number(pm.collectionVariables.get('paciente_id'))));",
+                  "pm.test('CP-API-11 · nace en estado PENDIENTE', () => pm.expect(cuerpo.estado).to.eql('PENDIENTE'));",
+                  "pm.collectionVariables.set('examen_id', cuerpo.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pacienteId\": {{paciente_id}},\n  \"tipo\": \"{{tipo_examen}}\",\n  \"descripcion\": \"Examen registrado por la coleccion automatizada de la EP3.\",\n  \"fechaExamen\": \"2026-11-24\"\n}"
+            },
+            "url": { "raw": "{{api}}/examenes", "host": ["{{api}}"], "path": ["examenes"] }
+          }
+        },
+        {
+          "name": "GET /pacientes/:id/examenes · flujo escalonado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-12 · HTTP 200', () => pm.response.to.have.status(200));",
+                  "const cuerpo = pm.response.json();",
+                  "pm.test('CP-API-12 · el examen creado aparece en la ficha', () => pm.expect(cuerpo.map((e) => e.id)).to.include(Number(pm.collectionVariables.get('examen_id'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": {
+              "raw": "{{api}}/pacientes/{{paciente_id}}/examenes",
+              "host": ["{{api}}"],
+              "path": ["pacientes", "{{paciente_id}}", "examenes"]
+            }
+          }
+        },
+        {
+          "name": "PUT /examenes/:id · cierre del examen",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-13 · HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-API-13 · el estado pasa a COMPLETADO', () => pm.expect(pm.response.json().estado).to.eql('COMPLETADO'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"COMPLETADO\",\n  \"descripcion\": \"Resultados dentro de rango de referencia.\"\n}"
+            },
+            "url": {
+              "raw": "{{api}}/examenes/{{examen_id}}",
+              "host": ["{{api}}"],
+              "path": ["examenes", "{{examen_id}}"]
+            }
+          }
+        },
+        {
+          "name": "DELETE /examenes/:id · baja logica (RF-3.3)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-14 · HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-API-14 · la respuesta confirma la baja', () => pm.expect(JSON.stringify(pm.response.json())).to.match(/elimin|baja|true/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": {
+              "raw": "{{api}}/examenes/{{examen_id}}",
+              "host": ["{{api}}"],
+              "path": ["examenes", "{{examen_id}}"]
+            }
+          }
+        },
+        {
+          "name": "GET /examenes/:id · el examen dado de baja ya no se entrega",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-15 · HTTP 404 tras la baja logica', () => pm.response.to.have.status(404));",
+                  "pm.test('CP-API-15 · el error no expone traza del servidor', () => pm.expect(pm.response.text()).to.not.match(/node_modules|\\/app\\/src|\\bat \\w+/));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": {
+              "raw": "{{api}}/examenes/{{examen_id}}",
+              "host": ["{{api}}"],
+              "path": ["examenes", "{{examen_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Control de acceso",
+      "item": [
+        {
+          "name": "GET /auditoria · el rol PACIENTE no accede (RF-5)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-16 · HTTP 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_paciente}}" }],
+            "url": { "raw": "{{api}}/auditoria", "host": ["{{api}}"], "path": ["auditoria"] }
+          }
+        },
+        {
+          "name": "POST /pacientes · el rol PACIENTE no crea fichas (RB-2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-17 · HTTP 403', () => pm.response.to.have.status(403));",
+                  "pm.test('CP-API-17 · el control es del servidor, no de la interfaz', () => pm.expect(pm.response.code).to.not.eql(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_paciente}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rut\": \"14365420-6\",\n  \"nombres\": \"Intruso\",\n  \"apellidos\": \"Sin Permiso\"\n}"
+            },
+            "url": { "raw": "{{api}}/pacientes", "host": ["{{api}}"], "path": ["pacientes"] }
+          }
+        },
+        {
+          "name": "GET /pacientes · el rol PACIENTE solo ve su ficha (RB-1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-18 · HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-API-18 · el listado se reduce a una sola ficha', () => pm.expect(pm.response.json()).to.have.lengthOf(1));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_paciente}}" }],
+            "url": { "raw": "{{api}}/pacientes", "host": ["{{api}}"], "path": ["pacientes"] }
+          }
+        },
+        {
+          "name": "GET /pacientes/:id · referencia directa a ficha ajena (IDOR)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-19 · HTTP 403 o 404 sobre la ficha de otro', () => pm.expect(pm.response.code).to.be.oneOf([403, 404]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_paciente}}" }],
+            "url": {
+              "raw": "{{api}}/pacientes/{{paciente_id}}",
+              "host": ["{{api}}"],
+              "path": ["pacientes", "{{paciente_id}}"]
+            }
+          }
+        },
+        {
+          "name": "GET /pacientes · sin cabecera Authorization",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-20 · HTTP 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{api}}/pacientes", "host": ["{{api}}"], "path": ["pacientes"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 Validacion de entradas",
+      "item": [
+        {
+          "name": "POST /pacientes · RUT con digito verificador incorrecto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-21 · HTTP 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rut\": \"12345678-9\",\n  \"nombres\": \"RUT\",\n  \"apellidos\": \"Invalido\"\n}"
+            },
+            "url": { "raw": "{{api}}/pacientes", "host": ["{{api}}"], "path": ["pacientes"] }
+          }
+        },
+        {
+          "name": "POST /pacientes · campo no declarado (asignacion masiva)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-22 · HTTP 400 por esquema estricto', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rut\": \"14365420-6\",\n  \"nombres\": \"Mass\",\n  \"apellidos\": \"Assignment\",\n  \"id\": 1\n}"
+            },
+            "url": { "raw": "{{api}}/pacientes", "host": ["{{api}}"], "path": ["pacientes"] }
+          }
+        },
+        {
+          "name": "POST /auth/registro · intento de elegir el rol",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.collectionVariables.set('usuario_intruso', `intruso.${Date.now()}`);"]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-23 · HTTP 400: el rol no es un campo del registro', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreUsuario\": \"{{usuario_intruso}}\",\n  \"email\": \"{{usuario_intruso}}@prueba.test\",\n  \"password\": \"ClaveDePrueba2026!\",\n  \"rol\": \"ADMIN\"\n}"
+            },
+            "url": {
+              "raw": "{{api}}/auth/registro",
+              "host": ["{{api}}"],
+              "path": ["auth", "registro"]
+            }
+          }
+        },
+        {
+          "name": "POST /auth/login · carga de inyeccion SQL",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-24 · la inyeccion no autentica', () => pm.expect(pm.response.code).to.be.oneOf([400, 401, 429]));",
+                  "pm.test('CP-API-24 · no se entrega token', () => pm.expect(pm.response.text()).to.not.include('\"token\"'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreUsuario\": \"' OR '1'='1' --\",\n  \"password\": \"' OR '1'='1' --\"\n}"
+            },
+            "url": { "raw": "{{api}}/auth/login", "host": ["{{api}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "GET /pacientes/:id · identificador no numerico",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-25 · HTTP 400 antes de llegar al dominio', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": {
+              "raw": "{{api}}/pacientes/1%20OR%201%3D1",
+              "host": ["{{api}}"],
+              "path": ["pacientes", "1%20OR%201%3D1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 Auditoria",
+      "item": [
+        {
+          "name": "GET /auditoria · el administrador consulta la traza (RF-5)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-API-26 · HTTP 200', () => pm.response.to.have.status(200));",
+                  "const cuerpo = pm.response.json();",
+                  "const registros = Array.isArray(cuerpo) ? cuerpo : (cuerpo.datos || cuerpo.registros || []);",
+                  "pm.test('CP-API-26 · hay registros de auditoria', () => pm.expect(registros.length).to.be.at.least(1));",
+                  "pm.test('CP-API-26 · la traza no guarda contrasenas', () => pm.expect(pm.response.text()).to.not.include('$2b$'));",
+                  "pm.test('CP-API-26 · las acciones de esta corrida quedaron registradas', () => pm.expect(pm.response.text()).to.match(/PACIENTE|EXAMEN|CREAR|crear/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": { "raw": "{{api}}/auditoria", "host": ["{{api}}"], "path": ["auditoria"] }
+          }
+        }
+      ]
+    }
+  ]
+}
