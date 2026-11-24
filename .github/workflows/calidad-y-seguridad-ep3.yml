@@ -1,0 +1,395 @@
+# =====================================================================
+# Cuidarte+ v1.2 · EP3 · Puertas de calidad y seguridad
+#
+# Este workflow es la aplicacion de la seccion 5.2 del informe: incorporar
+# al pipeline las puertas que la EP2 dejo DECLARADAS y nunca ejecuto.
+#
+# El argumento esta en los hechos. Los seis defectos de la EP3 existian
+# desde octubre, estaban dentro del alcance de herramientas que el propio
+# proyecto habia elegido, y siguieron ahi porque nadie las corrio. De las
+# tres puertas que se agregan aqui:
+#
+#   Trivy   habria detectado INC-EP3-04 (1 critica, 57 altas en la imagen
+#           de la SPA) e INC-EP3-06 (npm en la imagen de produccion)
+#   ZAP     habria detectado INC-EP3-01 (cabeceras ausentes en los
+#           archivos estaticos) e INC-EP3-05 (datos clinicos cacheables)
+#   Sondas  habria detectado INC-EP3-02 (HTTP 500 ante Origin ajeno)
+#
+# Cinco de los seis. El sexto, INC-EP3-03, lo detecta `npm audit`, que ya
+# corria: por eso el plan de mantenimiento lo programa SEMANALMENTE y no
+# solo ante un cambio de codigo. Un proyecto sin cambios no es un proyecto
+# sin riesgo nuevo.
+#
+# QUE NO ESTA AQUI, Y POR QUE
+#
+#   Lighthouse  mide rendimiento percibido; en un runner compartido la
+#               cifra depende de la maquina que toque y deja de ser
+#               comparable entre ejecuciones.
+#   k6          lo mismo, agravado: 200 usuarios concurrentes contra un
+#               runner de 2 vCPU miden el runner, no la aplicacion.
+#   SonarQube   requiere un servidor y un token de servicio que el
+#               proyecto no tiene.
+#
+# Las tres quedan como actividades del plan de mantenimiento ejecutadas en
+# ambiente local, con `ejecutar-automatizacion.sh`. Declararlas aqui sin
+# poder sostener sus umbrales seria repetir el error que esta EP3 corrige.
+# =====================================================================
+
+name: Calidad y seguridad EP3
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '24'
+  APP: codigo/cuidarte-plus-v1.2
+  CLAVE_QA: 'Cuidarte2026!'
+
+jobs:
+  # ===================================================================
+  # 1. Codigo fuente · etapa 1 del diagrama de controles
+  #
+  # Puertas heredadas de la EP2: formato, analisis estatico de seguridad
+  # y accesibilidad, pruebas con cobertura y escenarios de comportamiento.
+  # ===================================================================
+  codigo:
+    name: Codigo fuente (SAST, pruebas y BDD)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: |
+            ${{ env.APP }}/api/package-lock.json
+            ${{ env.APP }}/web/package-lock.json
+
+      - name: Instalar dependencias de la API
+        working-directory: ${{ env.APP }}/api
+        run: npm ci --no-audit --no-fund
+
+      - name: Instalar dependencias de la SPA
+        working-directory: ${{ env.APP }}/web
+        run: npm ci --no-audit --no-fund
+
+      - name: Formato del codigo (Prettier)
+        run: |
+          cd "$APP/api" && npx prettier --check .
+          cd "$GITHUB_WORKSPACE/$APP/web" && npx prettier --check .
+
+      - name: Analisis estatico de la API (eslint-plugin-security)
+        working-directory: ${{ env.APP }}/api
+        run: npx eslint .
+
+      - name: Analisis estatico de la SPA (seguridad y accesibilidad)
+        working-directory: ${{ env.APP }}/web
+        run: npx eslint .
+
+      - name: Pruebas unitarias e integracion con cobertura
+        working-directory: ${{ env.APP }}/api
+        run: npm run test:cov
+
+      - name: Escenarios de comportamiento (Cucumber)
+        working-directory: ${{ env.APP }}/api
+        run: npm run test:bdd
+
+      - name: Publicar el informe de cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura
+          path: ${{ env.APP }}/api/coverage/
+          retention-days: 30
+          if-no-files-found: warn
+
+  # ===================================================================
+  # 2. Dependencias · etapa 2 del diagrama
+  #
+  # Dos umbrales deliberados: en produccion cualquier severidad bloquea,
+  # porque ese codigo se despliega; en desarrollo solo alta y critica,
+  # porque no se despliega aunque si se ejecuta en este pipeline.
+  # ===================================================================
+  dependencias:
+    name: Dependencias (SCA)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Auditar dependencias de produccion de la API
+        working-directory: ${{ env.APP }}/api
+        run: npm audit --omit=dev --audit-level=low
+
+      - name: Auditar todas las dependencias de la API
+        working-directory: ${{ env.APP }}/api
+        run: npm audit --audit-level=high
+
+      - name: Auditar dependencias de produccion de la SPA
+        working-directory: ${{ env.APP }}/web
+        run: npm audit --omit=dev --audit-level=low
+
+      - name: Auditar todas las dependencias de la SPA
+        working-directory: ${{ env.APP }}/web
+        run: npm audit --audit-level=high
+
+  # ===================================================================
+  # 3. Imagen de contenedor · etapa 3 del diagrama · PUERTA NUEVA
+  #
+  # Es la capa que ni el analisis estatico ni `npm audit` pueden ver: el
+  # sistema base y las herramientas que la imagen arrastra. Aqui vivian
+  # INC-EP3-04 e INC-EP3-06.
+  # ===================================================================
+  imagenes:
+    name: Imagenes de contenedor (Trivy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Construir la imagen de la API
+        run: docker build -t cuidarte-api:ci "$APP/api"
+
+      - name: Construir la imagen de la SPA
+        run: docker build -t cuidarte-web:ci "$APP/web"
+
+      # Se invoca la imagen oficial de Trivy en vez de una accion de
+      # terceros: es exactamente el mismo comando que documenta el paso a
+      # paso de la entrega, de modo que lo que corre aqui y lo que corre en
+      # el equipo del grupo no pueden divergir.
+      - name: Escanear la imagen de la API (Trivy)
+        run: |
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v trivy-cache:/root/.cache/ \
+            aquasec/trivy:latest image \
+            --scanners vuln --severity CRITICAL,HIGH \
+            --exit-code 1 --no-progress cuidarte-api:ci
+
+      - name: Escanear la imagen de la SPA (Trivy)
+        run: |
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v trivy-cache:/root/.cache/ \
+            aquasec/trivy:latest image \
+            --scanners vuln --severity CRITICAL,HIGH \
+            --exit-code 1 --no-progress cuidarte-web:ci
+
+      - name: Inventario completo de vulnerabilidades (informativo)
+        if: always()
+        run: |
+          for imagen in cuidarte-api:ci cuidarte-web:ci; do
+            echo "::group::Inventario de $imagen"
+            docker run --rm \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              -v trivy-cache:/root/.cache/ \
+              aquasec/trivy:latest image \
+              --scanners vuln --severity LOW,MEDIUM,HIGH,CRITICAL \
+              --no-progress "$imagen" || true
+            echo "::endgroup::"
+          done
+
+      # Una ejecucion de codigo arbitrario dentro del contenedor no debe
+      # obtener root. El control se verifica, no se supone.
+      - name: La API no corre como root
+        run: |
+          usuario=$(docker run --rm --entrypoint id cuidarte-api:ci -un)
+          echo "La API corre como: $usuario"
+          if [ "$usuario" = "root" ]; then
+            echo "::error::La imagen de la API corre como root"
+            exit 1
+          fi
+
+      # INC-EP3-06: ningun gestor de paquetes debe viajar al artefacto
+      # desplegable. Si alguien revierte esa linea del Dockerfile, esta
+      # puerta lo detiene.
+      - name: La imagen de produccion no incluye npm
+        run: |
+          if docker run --rm --entrypoint sh cuidarte-api:ci -c "command -v npm" 2>/dev/null; then
+            echo "::error::La imagen de la API incluye npm (INC-EP3-06)"
+            exit 1
+          fi
+          echo "Sin npm en la imagen de produccion: correcto"
+
+  # ===================================================================
+  # 4. Ambiente en ejecucion · etapa 4 del diagrama · PUERTAS NUEVAS
+  #
+  # Levanta el ambiente completo y le aplica lo que solo puede verificarse
+  # con la aplicacion encendida: sondas dirigidas, la coleccion de API y
+  # el escaneo dinamico de OWASP ZAP. Aqui vivian INC-EP3-01, INC-EP3-02
+  # e INC-EP3-05.
+  # ===================================================================
+  ambiente:
+    name: Ambiente en ejecucion (sondas, Newman, ZAP)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      # Los secretos se generan por ejecucion y no salen del runner: el
+      # ambiente de CI no comparte credenciales con ningun otro (NFR-SEG-13).
+      - name: Preparar el archivo .env del ambiente
+        working-directory: ${{ env.APP }}
+        run: |
+          secreto() { node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"; }
+          sed -e "s|CAMBIE_ESTA_CLAVE_ANTES_DE_LEVANTAR|$(secreto)|" \
+              -e "s|GENERE_UN_SECRETO_ALEATORIO_DE_AL_MENOS_32_CARACTERES|$(secreto)|" \
+              -e "s|GENERE_OTRO_SECRETO_ALEATORIO_DISTINTO_DEL_ANTERIOR|$(secreto)|" \
+              .env.example > .env
+          echo "Archivo .env generado con secretos efimeros."
+
+      - name: Levantar el ambiente
+        working-directory: ${{ env.APP }}
+        run: docker compose up -d --build --wait
+
+      - name: Cargar los datos de prueba
+        working-directory: ${{ env.APP }}
+        run: docker compose --profile semilla run --rm semilla
+
+      - name: Comprobar el arranque
+        run: |
+          curl -s --retry 30 --retry-delay 1 --retry-connrefused --retry-all-errors \
+            -m 60 http://localhost:3000/api/v1/salud
+          echo
+          curl -s -o /dev/null -w "SPA: HTTP %{http_code}\n" http://localhost:5173/
+
+      # --- Puerta nueva: sondas dirigidas de seguridad -----------------
+      # Se ejecutan ANTES que Newman porque la sonda SEG-A6 agota a
+      # proposito la ventana del limitador de autenticacion; cualquier
+      # inicio de sesion posterior recibiria HTTP 429.
+      - name: Sondas dirigidas de seguridad (29 casos)
+        working-directory: seguridad
+        env:
+          EJECUTOR: GitHub Actions
+        run: node sondas-seguridad.mjs
+
+      - name: Reiniciar el limitador de autenticacion
+        working-directory: ${{ env.APP }}
+        run: |
+          docker compose exec -T db psql -U cuidarte -d cuidarte -c \
+            "UPDATE usuario SET intentos_fallidos = 0, bloqueado_hasta = NULL;"
+          docker compose restart api
+          curl -s --retry 30 --retry-delay 1 --retry-connrefused --retry-all-errors \
+            -m 60 -o /dev/null http://localhost:3000/api/v1/salud
+
+      # --- Coleccion de API ------------------------------------------
+      - name: Pruebas de API (Postman con Newman)
+        working-directory: automatizacion
+        run: |
+          npx --yes newman@6 run postman/Cuidarte-EP3.postman_collection.json \
+            -e postman/Cuidarte-EP3.postman_environment.json \
+            --reporters cli --color off
+
+      # --- Puerta nueva: escaneo dinamico -----------------------------
+      # Las reglas de `rules.tsv` estan trazadas a requisitos del ERS: lo
+      # que alli figura como FAIL hace fallar la puerta, de modo que el
+      # resultado se lee como verificacion de un requisito y no como una
+      # lista de avisos sin consecuencia.
+      - name: Escaneo dinamico de la SPA (OWASP ZAP baseline)
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/zap-salida"
+          cp seguridad/zap/rules.tsv "$GITHUB_WORKSPACE/zap-salida/rules.tsv"
+          # El contenedor de ZAP corre con su propio usuario y necesita
+          # poder escribir el informe en el volumen montado.
+          chmod -R 777 "$GITHUB_WORKSPACE/zap-salida"
+          docker run --rm --network host \
+            -v "$GITHUB_WORKSPACE/zap-salida":/zap/wrk/:rw \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t http://localhost:5173 \
+            -c rules.tsv -r zap-spa.html -w zap-spa.md -I \
+            | tee "$GITHUB_WORKSPACE/zap-salida/zap-spa-consola.txt"
+          if grep -qE "^FAIL-NEW: [1-9]" "$GITHUB_WORKSPACE/zap-salida/zap-spa-consola.txt"; then
+            echo "::error::OWASP ZAP reporto fallos sobre la SPA"
+            exit 1
+          fi
+
+      - name: Escaneo dinamico de la API (OWASP ZAP baseline)
+        run: |
+          docker run --rm --network host \
+            -v "$GITHUB_WORKSPACE/zap-salida":/zap/wrk/:rw \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t http://localhost:3000/api/v1/salud \
+            -c rules.tsv -r zap-api.html -w zap-api.md -I \
+            | tee "$GITHUB_WORKSPACE/zap-salida/zap-api-consola.txt"
+          if grep -qE "^FAIL-NEW: [1-9]" "$GITHUB_WORKSPACE/zap-salida/zap-api-consola.txt"; then
+            echo "::error::OWASP ZAP reporto fallos sobre la API"
+            exit 1
+          fi
+
+      - name: Publicar la evidencia generada
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencia-ambiente
+          path: |
+            zap-salida/
+            evidencias/v1.2/seguridad/Anexo_S1_sondas-seguridad.txt
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Registro de los contenedores si algo fallo
+        if: failure()
+        working-directory: ${{ env.APP }}
+        run: docker compose logs --tail 120
+
+      - name: Apagar el ambiente
+        if: always()
+        working-directory: ${{ env.APP }}
+        run: docker compose down -v
+
+  # ===================================================================
+  # 5. Veredicto · etapa 5 del diagrama
+  #
+  # Vincula cada puerta con el criterio que preserva, de modo que el
+  # resultado del pipeline se lea como un informe de cumplimiento y no
+  # como una lista de etapas en verde.
+  # ===================================================================
+  veredicto:
+    name: Veredicto de las puertas
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [codigo, dependencias, imagenes, ambiente]
+    steps:
+      - name: Consolidar el resultado
+        run: |
+          {
+            echo "## Puertas de calidad y seguridad · Cuidarte+ v1.2"
+            echo ""
+            echo "| Etapa | Puerta | Criterio que preserva | Resultado |"
+            echo "|---|---|---|---|"
+            echo "| 1 Codigo fuente | SAST, pruebas y BDD | OWASP · Ley 20.422 · ISO/IEC 25010 | ${{ needs.codigo.result }} |"
+            echo "| 2 Dependencias | npm audit | Ley 21.663 | ${{ needs.dependencias.result }} |"
+            echo "| 3 Imagen | Trivy y usuario no privilegiado | Ley 21.663 | ${{ needs.imagenes.result }} |"
+            echo "| 4 Ambiente | Sondas, Newman y OWASP ZAP | Ley 19.628/21.719 · OWASP | ${{ needs.ambiente.result }} |"
+            echo ""
+            echo "Commit: \`${{ github.sha }}\`"
+            echo ""
+            echo "Lighthouse y k6 no se ejecutan aqui: sus umbrales miden"
+            echo "rendimiento percibido y no son comparables en un runner"
+            echo "compartido. Corren en ambiente local como actividad del plan"
+            echo "de mantenimiento (\`automatizacion/ejecutar-automatizacion.sh\`)."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fallar si alguna puerta no paso
+        if: ${{ contains(needs.*.result, 'failure') }}
+        run: |
+          echo "::error::Al menos una puerta de calidad no paso. Revise el resumen."
+          exit 1

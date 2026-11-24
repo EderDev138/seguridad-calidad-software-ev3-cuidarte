@@ -7,6 +7,14 @@ médicos).
 **Eder Valdivia · Marcelo Morales** · Sección 003V · Docente: Mauricio Andrés
 Velásquez Silva · 23 de noviembre de 2026
 
+[![Calidad y seguridad EP3](https://github.com/EderDev138/seguridad-calidad-software-ev3-cuidarte/actions/workflows/calidad-y-seguridad-ep3.yml/badge.svg?branch=main)](https://github.com/EderDev138/seguridad-calidad-software-ev3-cuidarte/actions/workflows/calidad-y-seguridad-ep3.yml)
+
+El badge corresponde a las cuatro etapas de puertas automatizadas que se
+ejecutan en cada cambio: código fuente, dependencias, imágenes de contenedor y
+ambiente en ejecución. Las tres últimas incluyen las puertas que la EP2
+declaraba y nunca ejecutaba —Trivy, OWASP ZAP y las sondas dirigidas—, que son
+las que detectaron cinco de los seis defectos de esta evaluación.
+
 Esta fase aplica sobre la versión corregida de la EP2 cinco enfoques de pruebas
 de seguridad y cuatro herramientas de automatización que el proyecto **no había
 ejecutado nunca**, aunque tres de ellas estaban declaradas en su pipeline desde
@@ -32,6 +40,7 @@ verificados.
 | `seguridad/` | Batería de pruebas de seguridad (sondas, ZAP, Trivy, SAST, SCA) |
 | `automatizacion/` | Batería de automatización (Playwright, Postman, Lighthouse, k6) |
 | `scripts/` | Generadores del diagrama y del informe en Word |
+| `.github/workflows/` | Puertas automatizadas de calidad y seguridad (§5.2 del informe) |
 | `evidencias/v1.2/` | Anexos de cada ejecución, en versión `ANTES` y `DESPUES` |
 
 ---

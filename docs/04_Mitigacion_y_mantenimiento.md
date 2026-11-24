@@ -195,7 +195,21 @@ respecto del esfuerzo:
 | 4 | **SonarQube** | Servidor y token de servicio | Deuda técnica y duplicación; el de menor urgencia |
 
 Las tres primeras no requieren servicios externos y cubren cinco de los seis
-hallazgos de esta EP3. Es la propuesta concreta de mejora continua.
+hallazgos de esta EP3.
+
+> **Estado: implementado.** Las tres puertas están en
+> `.github/workflows/calidad-y-seguridad-ep3.yml` y se ejecutan en cada cambio.
+> El workflow levanta el ambiente completo en el runner, carga la semilla y
+> aplica las sondas, la colección de Postman y los dos escaneos de ZAP; en
+> paralelo construye las dos imágenes y las escanea con Trivy. Una puerta en
+> rojo detiene el pipeline, de modo que el criterio de salida de §3.3 deja de
+> depender de que alguien se acuerde de ejecutar la batería.
+>
+> Lighthouse y k6 **no** se incorporaron, y la razón está documentada en el
+> propio workflow: sus umbrales miden rendimiento percibido y no son
+> comparables entre ejecuciones en un runner compartido. Siguen como actividad
+> de ambiente local. Declarar en el pipeline una medición que no se puede
+> sostener sería repetir exactamente el error que esta EP3 corrige.
 
 ### 3.3 Criterio de salida a producción
 

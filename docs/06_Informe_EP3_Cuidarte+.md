@@ -525,6 +525,25 @@ incorporar las restantes por orden de valor respecto del esfuerzo:
 Las tres primeras no requieren servicios externos y cubren **cinco de los seis
 hallazgos** de esta evaluación.
 
+**Esta propuesta quedó implementada.** El archivo
+`.github/workflows/calidad-y-seguridad-ep3.yml` ejecuta las tres puertas en cada
+cambio, organizado en las mismas cinco etapas del diagrama de la sección 2.7: un
+trabajo por etapa, cada uno con las puertas que le corresponden, y un trabajo
+final que consolida el veredicto vinculando cada puerta con el criterio
+normativo que preserva. El trabajo de ambiente levanta la aplicación completa en
+el runner, carga la semilla y le aplica las sondas, la colección de Postman y
+los dos escaneos de ZAP; el de imágenes construye los dos contenedores, los
+escanea con Trivy y verifica además que la API no corra como root y que la
+imagen no incluya `npm`, de modo que una reversión de la corrección de
+INC-EP3-06 detenga el pipeline.
+
+Lighthouse y k6 **no** se incorporaron, por una razón que conviene explicitar:
+sus umbrales miden rendimiento percibido, y en un runner compartido la cifra
+depende de la máquina que toque, de modo que deja de ser comparable entre
+ejecuciones. Siguen como actividad de ambiente local dentro del plan. Declarar
+en el pipeline una medición cuyo umbral no se puede sostener sería repetir
+exactamente el error que esta evaluación corrige.
+
 ### 5.3 Criterio de salida a producción
 
 El software no se autoriza mientras exista alguna de estas condiciones:
