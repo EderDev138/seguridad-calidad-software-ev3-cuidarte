@@ -18,3 +18,24 @@ Thumbs.db
 *.log
 
 # Los informes HTML de ZAP y Lighthouse SI se versionan: son la evidencia.
+
+# Evidencia de corridas sueltas, sin sufijo ANTES/DESPUES: son comprobaciones
+# locales. La evidencia del informe lleva siempre sufijo y si se versiona.
+evidencias/v1.2/automatizacion/Anexo_A0_jest-y-bdd.txt
+evidencias/v1.2/automatizacion/Anexo_A1_playwright-ui.txt
+evidencias/v1.2/automatizacion/Anexo_A2_newman-api.txt
+evidencias/v1.2/automatizacion/Anexo_A3_lighthouse.txt
+evidencias/v1.2/automatizacion/Anexo_A4_k6-carga.txt
+evidencias/v1.2/automatizacion/lighthouse-spa.html
+evidencias/v1.2/automatizacion/lighthouse-spa.json
+evidencias/v1.2/seguridad/Anexo_S1_sondas-seguridad.txt
+evidencias/v1.2/seguridad/Anexo_S2_npm-audit.txt
+evidencias/v1.2/seguridad/Anexo_S3_trivy-imagenes.txt
+evidencias/v1.2/seguridad/Anexo_S4_sast-eslint.txt
+evidencias/v1.2/capturas/ui_01_acceso.png
+evidencias/v1.2/capturas/ui_02_pacientes.png
+evidencias/v1.2/capturas/ui_03_examenes.png
+evidencias/v1.2/capturas/ui_04_examen-creado.png
+evidencias/v1.2/capturas/ui_05_auditoria.png
+evidencias/v1.2/capturas/ui_06_paciente.png
+evidencias/v1.2/capturas/ui_99_fallo*.png
