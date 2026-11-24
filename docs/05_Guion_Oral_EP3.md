@@ -265,6 +265,10 @@ Muestre `diagrama_controles.png` y explíquelo, no lo describa.
 
 ---
 
+> **Para la demostración en vivo**, el guion de qué ejecutar y en qué orden
+> está en [`08_Demo_End_to_End.md`](08_Demo_End_to_End.md): tres comandos,
+> veinte segundos, y un plan B por si algo falla delante del docente.
+
 ## Banco de preguntas (5 minutos)
 
 ### Sobre herramientas y enfoques

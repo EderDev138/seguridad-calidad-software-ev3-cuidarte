@@ -1,0 +1,154 @@
+=====================================================================
+Cuidarte+ v1.2 · EP3 · Pruebas de seguridad ejecutadas (sondas)
+=====================================================================
+Fecha de ejecucion : 2026-11-24T02:40:21.915Z
+Ejecutor           : no declarado
+API bajo prueba    : http://localhost:3000/api/v1
+SPA bajo prueba    : http://localhost:5173
+Node               : v22.16.0
+Enfoques: A autenticacion/sesion · B control de acceso ·
+          C validacion de entradas · D configuracion y exposicion
+=====================================================================
+
+--- A. Autenticacion y gestion de sesion -----------------------------
+[ OK ] SEG-A1  Credencial valida devuelve sesion con token firmado
+        esperado: HTTP 200 y token presente
+        obtenido: HTTP 200, token presente
+[ OK ] SEG-A2  Credencial invalida se rechaza sin revelar si el usuario existe
+        esperado: HTTP 401 y el mismo mensaje para usuario inexistente
+        obtenido: HTTP 401 / 401; mensaje "Credenciales invalidas"
+[ OK ] SEG-A3  Recurso protegido exige sesion
+        esperado: HTTP 401 sin cabecera Authorization
+        obtenido: HTTP 401
+[ OK ] SEG-A4  Token con firma alterada se rechaza
+        esperado: HTTP 401 al manipular la firma del JWT
+        obtenido: HTTP 401
+[ OK ] SEG-A5  El cierre de sesion revoca el token emitido (RF-1.2)
+        esperado: HTTP 200 antes del logout y 401 al reutilizar el mismo token
+        obtenido: antes HTTP 200, despues HTTP 401
+
+--- B. Control de acceso y autorizacion ------------------------------
+[ OK ] SEG-B1  Un paciente no accede al registro de auditoria (RF-5)
+        esperado: HTTP 403
+        obtenido: HTTP 403
+[ OK ] SEG-B2  Un paciente no crea fichas clinicas (RB-2)
+        esperado: HTTP 403
+        obtenido: HTTP 403
+[ OK ] SEG-B3  El listado de pacientes se filtra por titularidad (RB-1)
+        esperado: el administrador ve todas las fichas y el paciente solo la suya (1)
+        obtenido: admin 8 fichas, paciente 1 ficha(s)
+[ OK ] SEG-B4  Referencia directa a objeto ajeno (IDOR) bloqueada
+        esperado: HTTP 403 o 404 al pedir la ficha de otro paciente
+        obtenido: HTTP 404 (ficha 6)
+[ OK ] SEG-B5  Los examenes de otro paciente no son legibles
+        esperado: HTTP 403 o 404
+        obtenido: HTTP 404
+[ OK ] SEG-B6  El autorregistro no permite elegir el rol (escalada de privilegios)
+        esperado: HTTP 400: el campo rol no esta declarado en el esquema
+        obtenido: HTTP 400
+[ OK ] SEG-B7  La gestion de usuarios queda reservada al administrador
+        esperado: HTTP 403 para el rol MEDICO
+        obtenido: HTTP 403
+
+--- C. Validacion y sanitizacion de entradas ------------------------
+[ OK ] SEG-C1  Inyeccion SQL en el formulario de acceso (consultas parametrizadas)
+        esperado: ningun 200: todas las cargas se rechazan con 400 o 401
+        obtenido: estados 401,401,401,401
+[ OK ] SEG-C2  La base de datos sobrevive a la carga destructiva (DROP TABLE)
+        esperado: HTTP 200 y la tabla de pacientes sigue devolviendo registros
+        obtenido: HTTP 200, 8 fichas legibles
+[ OK ] SEG-C3  Parametro de ruta no numerico se rechaza antes del dominio
+        esperado: HTTP 400
+        obtenido: HTTP 400
+[ OK ] SEG-C4  Filtro de consulta con carga SQL se rechaza o se trata como texto
+        esperado: HTTP 400, o 200 sin exponer registros de otras entidades
+        obtenido: HTTP 200
+[ OK ] SEG-C5  XSS almacenado: la carga se devuelve como dato JSON y no como HTML ejecutable
+        esperado: Content-Type application/json y cabecera X-Content-Type-Options: nosniff
+        obtenido: HTTP 200, Content-Type "application/json; charset=utf-8", nosniff "nosniff"
+[ OK ] SEG-C6  La SPA declara Content-Security-Policy que bloquea script en linea
+        esperado: CSP con script-src 'self' y sin 'unsafe-inline' en script-src
+        obtenido: CSP: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; fr...
+[ OK ] SEG-C7  CSRF: la sesion no viaja en cookie y una peticion de origen ajeno sin token falla
+        esperado: sin cabecera Set-Cookie en el login y HTTP 401 en la peticion cruzada
+        obtenido: Set-Cookie ausente, peticion cruzada HTTP 401
+[ OK ] SEG-C8  La politica CORS no habilita origenes arbitrarios
+        esperado: sin Access-Control-Allow-Origin para un origen no declarado (o distinto de *)
+        obtenido: Access-Control-Allow-Origin: ausente
+[ OK ] SEG-C9  Asignacion masiva: un campo no declarado invalida la peticion
+        esperado: HTTP 400 (esquema estricto)
+        obtenido: HTTP 400
+[ OK ] SEG-C10  Texto libre sobredimensionado se rechaza (vector de agotamiento de memoria)
+        esperado: HTTP 400 con descripcion de 5.000 caracteres (maximo 2.000)
+        obtenido: HTTP 400
+[ OK ] SEG-C11  Documento con tipo declarado falso se rechaza por su contenido real
+        esperado: HTTP 400: la validacion no confia en la extension ni en el Content-Type
+        obtenido: HTTP 400
+
+--- D. Configuracion y exposicion de informacion --------------------
+[ OK ] SEG-D1  Cabeceras de seguridad en la pagina principal de la SPA
+        esperado: las 6 cabeceras de NFR-SEG-10 presentes
+        obtenido: todas presentes
+[ OK ] SEG-D2  Cabeceras de seguridad en un archivo estatico (/assets/index-ChxVu1Vz.js)
+        esperado: las 6 cabeceras de NFR-SEG-10 presentes
+        obtenido: todas presentes
+[ OK ] SEG-D3  La API no revela el motor ni su version en las cabeceras
+        esperado: sin X-Powered-By y sin version en Server
+        obtenido: ninguna cabecera delatora
+[ OK ] SEG-D4  Los errores no devuelven traza de pila ni rutas del servidor
+        esperado: HTTP 404 con mensaje de negocio y sin traza
+        obtenido: HTTP 404, traza ausente
+[ OK ] SEG-D5  Los archivos de configuracion no se sirven desde la SPA
+        esperado: la peticion a /.env no devuelve el archivo (200 con el index de la SPA o 404)
+        obtenido: HTTP 200, contiene secretos: no
+
+--- A (diferido). Limitador de autenticacion ------------------------
+Se ejecuta al final porque bloquea /auth/login durante 15 minutos.
+[ OK ] SEG-A6  El limitador de peticiones frena la fuerza bruta (NFR-SEG-11, RF-1.3)
+        esperado: HTTP 429 antes de 14 intentos y la cuenta queda bloqueada incluso con la clave correcta
+        obtenido: secuencia 401,401,429 · con clave correcta HTTP 429
+
+=====================================================================
+RESUMEN DE LAS SONDAS DE SEGURIDAD
+=====================================================================
+ID         ENFOQUE                RESULTADO  CASO
+---------  ---------------------  ---------  ------------------------
+SEG-A1     Autenticacion          APRUEBA    Credencial valida devuelve sesion con token firmado
+SEG-A2     Autenticacion          APRUEBA    Credencial invalida se rechaza sin revelar si el usuario existe
+SEG-A3     Autenticacion          APRUEBA    Recurso protegido exige sesion
+SEG-A4     Autenticacion          APRUEBA    Token con firma alterada se rechaza
+SEG-A5     Sesion                 APRUEBA    El cierre de sesion revoca el token emitido (RF-1.2)
+SEG-A6     Sesion                 APRUEBA    El limitador de peticiones frena la fuerza bruta (NFR-SEG-11, RF-1.3)
+SEG-B1     Control de acceso      APRUEBA    Un paciente no accede al registro de auditoria (RF-5)
+SEG-B2     Control de acceso      APRUEBA    Un paciente no crea fichas clinicas (RB-2)
+SEG-B3     Control de acceso      APRUEBA    El listado de pacientes se filtra por titularidad (RB-1)
+SEG-B4     Control de acceso      APRUEBA    Referencia directa a objeto ajeno (IDOR) bloqueada
+SEG-B5     Control de acceso      APRUEBA    Los examenes de otro paciente no son legibles
+SEG-B6     Control de acceso      APRUEBA    El autorregistro no permite elegir el rol (escalada de privilegios)
+SEG-B7     Control de acceso      APRUEBA    La gestion de usuarios queda reservada al administrador
+SEG-C1     Validacion de entradas  APRUEBA    Inyeccion SQL en el formulario de acceso (consultas parametrizadas)
+SEG-C2     Validacion de entradas  APRUEBA    La base de datos sobrevive a la carga destructiva (DROP TABLE)
+SEG-C3     Validacion de entradas  APRUEBA    Parametro de ruta no numerico se rechaza antes del dominio
+SEG-C4     Validacion de entradas  APRUEBA    Filtro de consulta con carga SQL se rechaza o se trata como texto
+SEG-C5     Validacion de entradas  APRUEBA    XSS almacenado: la carga se devuelve como dato JSON y no como HTML ejecutable
+SEG-C6     Validacion de entradas  APRUEBA    La SPA declara Content-Security-Policy que bloquea script en linea
+SEG-C7     Validacion de entradas  APRUEBA    CSRF: la sesion no viaja en cookie y una peticion de origen ajeno sin token falla
+SEG-C8     Validacion de entradas  APRUEBA    La politica CORS no habilita origenes arbitrarios
+SEG-C9     Validacion de entradas  APRUEBA    Asignacion masiva: un campo no declarado invalida la peticion
+SEG-C10    Validacion de entradas  APRUEBA    Texto libre sobredimensionado se rechaza (vector de agotamiento de memoria)
+SEG-C11    Validacion de entradas  APRUEBA    Documento con tipo declarado falso se rechaza por su contenido real
+SEG-D1     Configuracion          APRUEBA    Cabeceras de seguridad en la pagina principal de la SPA
+SEG-D2     Configuracion          APRUEBA    Cabeceras de seguridad en un archivo estatico (/assets/index-ChxVu1Vz.js)
+SEG-D3     Configuracion          APRUEBA    La API no revela el motor ni su version en las cabeceras
+SEG-D4     Configuracion          APRUEBA    Los errores no devuelven traza de pila ni rutas del servidor
+SEG-D5     Configuracion          APRUEBA    Los archivos de configuracion no se sirven desde la SPA
+---------  ---------------------  ---------  ------------------------
+Total: 29 sondas · aprueban 29 · fallan 0 · 3.2 s
+=====================================================================
+
+Por enfoque de prueba:
+  Autenticacion          4/4
+  Sesion                 2/2
+  Control de acceso      7/7
+  Validacion de entradas 11/11
+  Configuracion          5/5

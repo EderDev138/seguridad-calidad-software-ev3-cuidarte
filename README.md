@@ -36,6 +36,7 @@ verificados.
 | `docs/03_Diagrama_controles.md` | Lectura del diagrama de controles (IE3 / IE4) |
 | `docs/04_Mitigacion_y_mantenimiento.md` | Mitigación de los seis defectos y plan de mantenimiento |
 | `docs/07_Paso_a_Paso_Reproducir_EP3.md` | Cómo reproducir cada cifra, con lista de verificación final |
+| `docs/08_Demo_End_to_End.md` | **Guion de la demostración**: levantar, probar y mostrar, con tiempos y plan B |
 | `codigo/cuidarte-plus-v1.2/` | Software bajo prueba, derivado de la v1.1 de la EP2 |
 | `seguridad/` | Batería de pruebas de seguridad (sondas, ZAP, Trivy, SAST, SCA) |
 | `automatizacion/` | Batería de automatización (Playwright, Postman, Lighthouse, k6) |
@@ -131,6 +132,11 @@ node generar-informe-docx.mjs   # entrega/Informe_EP3_Cuidarte+.docx
 El procedimiento detallado, con los resultados esperados de cada paso y qué
 hacer cuando algo falla, está en
 [`docs/07_Paso_a_Paso_Reproducir_EP3.md`](docs/07_Paso_a_Paso_Reproducir_EP3.md).
+
+Para el día de la evaluación —qué escribir, en qué orden, cuánto tarda cada
+cosa y qué hacer si algo falla en vivo— use
+[`docs/08_Demo_End_to_End.md`](docs/08_Demo_End_to_End.md). La demostración
+completa son tres comandos y veinte segundos.
 
 ---
 
